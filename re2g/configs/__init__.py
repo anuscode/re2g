@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     checkpoint_dirpath: str = "checkpoints"
     checkpoint_monitor: str = "val_loss"
-    checkpoint_mode: str = "max"
+    checkpoint_mode: str = "min"
     checkpoint_every_n_train_steps: int = 500
 
 

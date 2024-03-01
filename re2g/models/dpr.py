@@ -81,6 +81,7 @@ class DPR(pl.LightningModule):
             pretrained_model_name_or_path,
             num_trainable_layers=context_trainable_layers,
         )
+        self.criteria = nn.CrossEntropyLoss()
 
     def forward(
         self,
@@ -111,7 +112,7 @@ class DPR(pl.LightningModule):
         context_attention_mask = batch["context_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        query_embeddings, context_embeddings = self(
+        query_embeddings, context_embeddings = self.forward(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
@@ -137,7 +138,7 @@ class DPR(pl.LightningModule):
         context_attention_mask = batch["context_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        query_embeddings, context_embeddings = self(
+        query_embeddings, context_embeddings = self.forward(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
@@ -162,5 +163,5 @@ class DPR(pl.LightningModule):
         labels = torch.arange(
             similarity_scores.size(0), device=query_embeddings.device, dtype=torch.long
         )
-        loss = F.cross_entropy(similarity_scores, labels)
+        loss = self.criteria(similarity_scores, labels)
         return loss
