@@ -91,11 +91,16 @@ class DPR(pl.LightningModule):
         )
         loss = self.loss(query_embeddings, context_embeddings)
         self.log(
-            "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+            name="val_loss",
+            value=loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
         )
         return {"val_loss": loss}
 
-    def loss(self, query_embeddings, context_embeddings):
+    def loss(self, query_embeddings, context_embeddings) -> torch.Tensor:
         query_embeddings_t = query_embeddings.transpose(0, 1)
         similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
         labels = torch.arange(similarity_scores.size(0))

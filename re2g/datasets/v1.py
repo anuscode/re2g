@@ -1,6 +1,7 @@
-import pytorch_lightning as pl
+import torch
 from datasets import load_dataset
 from datasets.utils.typing import PathLike
+from lightning import LightningDataModule
 from torch.utils.data import Dataset, DataLoader
 from transformers import ElectraTokenizer
 
@@ -20,7 +21,7 @@ class SquadV1Dataset(Dataset):
         return self.dataset[idx]
 
 
-class SquadV1DataModule(pl.LightningDataModule):
+class SquadV1DataModule(LightningDataModule):
     def __init__(
         self, pretrained_model_name_or_path: str | PathLike, batch_size: int = 128
     ):
@@ -28,7 +29,6 @@ class SquadV1DataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.squad_train = SquadV1Dataset(data_type="train")
         self.squad_val = SquadV1Dataset(data_type="validation")
-        self.squad_test = SquadV1Dataset(data_type="validation")
         self.tokenizer = ElectraTokenizer.from_pretrained(pretrained_model_name_or_path)
 
     def train_dataloader(self):
@@ -37,16 +37,15 @@ class SquadV1DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             collate_fn=self._collate_fn,
+            num_workers=settings.dataloader_num_workers,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            self.squad_val, batch_size=self.batch_size, collate_fn=self._collate_fn
-        )
-
-    def test_dataloader(self):
-        return DataLoader(
-            self.squad_test, batch_size=self.batch_size, collate_fn=self._collate_fn
+            self.squad_val,
+            batch_size=self.batch_size,
+            collate_fn=self._collate_fn,
+            num_workers=settings.dataloader_num_workers,
         )
 
     def _collate_fn(self, batch: list[dict]):

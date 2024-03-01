@@ -15,6 +15,7 @@ matplotlib = "^3.8.3"
 torchsummary = "^1.5.1"
 pydantic-settings = "^2.2.1"
 lightning = "^2.2.0.post0"
+wandb = "^0.16.3"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.1.0"
