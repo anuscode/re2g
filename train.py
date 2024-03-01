@@ -38,9 +38,9 @@ def main():
 
     callbacks = [
         ModelCheckpoint(
-            dirpath="checkpoints",
-            monitor="val_accuracy",
-            mode="max",
+            dirpath=CHECKPOINT_DIRPATH,
+            monitor=CHECKPOINT_MONITOR,
+            mode=CHECKPOINT_MODE,
             every_n_train_steps=100,
         ),
     ]
