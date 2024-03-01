@@ -5,6 +5,9 @@ class Settings(BaseSettings):
 
     pretrained_model_name_or_path: str = "monologg/koelectra-base-v3-discriminator"
 
+    learning_rate: float = 1e-5
+    weight_decay: float = 1e-2
+
     context_max_length: int = 512
     context_padding: str = "longest"
 
@@ -21,7 +24,7 @@ class Settings(BaseSettings):
     trainer_precision: int = 32
 
     checkpoint_dirpath: str = "checkpoints"
-    checkpoint_monitor: str = "val_accuracy"
+    checkpoint_monitor: str = "val_loss"
     checkpoint_mode: str = "max"
 
 

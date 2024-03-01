@@ -17,6 +17,10 @@ PROJECT = "re2g"
 
 MODEL_NAME = settings.pretrained_model_name_or_path
 
+LEARNING_RATE = settings.learning_rate
+
+WEIGHT_DECAY = settings.weight_decay
+
 TRAINER_STRATEGY = settings.trainer_strategy
 
 TRAINER_PRECISION = settings.trainer_precision
@@ -41,7 +45,11 @@ def main():
     for key, value in settings.dict().items():
         print(f"{key}: {value}")
 
-    dpr = DPR(MODEL_NAME)
+    dpr = DPR(
+        pretrained_model_name_or_path=MODEL_NAME,
+        learning_rate=LEARNING_RATE,
+        weight_decay=WEIGHT_DECAY,
+    )
 
     wandb.init(project=PROJECT, config=dpr.hparams)
     wandb.watch(dpr, log="all", log_freq=1)
