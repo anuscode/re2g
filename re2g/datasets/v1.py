@@ -43,6 +43,7 @@ class SquadV1DataModule(LightningDataModule):
         return DataLoader(
             self.squad_val,
             batch_size=self.batch_size,
+            shuffle=True,
             collate_fn=self._collate_fn,
             num_workers=settings.dataloader_num_workers,
         )

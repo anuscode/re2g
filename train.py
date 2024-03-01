@@ -15,12 +15,15 @@ from re2g.models.dpr import DPR
 
 PROJECT = "re2g"
 
+# Models
 MODEL_NAME = settings.pretrained_model_name_or_path
 
-LEARNING_RATE = settings.learning_rate
+# Optimizers
+OPTIMIZER_LEARNING_RATE = settings.optimizer_learning_rate
 
-WEIGHT_DECAY = settings.weight_decay
+OPTIMIZER_WEIGHT_DECAY = settings.optimizer_weight_decay
 
+# Trainers
 TRAINER_STRATEGY = settings.trainer_strategy
 
 TRAINER_PRECISION = settings.trainer_precision
@@ -31,13 +34,17 @@ TRAINER_MAX_EPOCHS = settings.trainer_max_epochs
 
 TRAINER_LIMIT_VAL_BATCHES = settings.trainer_limit_val_batches
 
+# DataModules
 DATAMODULE_BATCH_SIZE = settings.datamodule_batch_size
 
+# Checkpoints
 CHECKPOINT_DIRPATH = settings.checkpoint_dirpath
 
 CHECKPOINT_MONITOR = settings.checkpoint_monitor
 
 CHECKPOINT_MODE = settings.checkpoint_mode
+
+CHECKPOINT_EVERY_N_TRAIN_STEPS = settings.checkpoint_every_n_train_steps
 
 
 def main():
@@ -47,8 +54,8 @@ def main():
 
     dpr = DPR(
         pretrained_model_name_or_path=MODEL_NAME,
-        learning_rate=LEARNING_RATE,
-        weight_decay=WEIGHT_DECAY,
+        learning_rate=OPTIMIZER_LEARNING_RATE,
+        weight_decay=OPTIMIZER_WEIGHT_DECAY,
     )
 
     wandb.init(project=PROJECT, config=dpr.hparams)
@@ -66,7 +73,7 @@ def main():
             dirpath=CHECKPOINT_DIRPATH,
             monitor=CHECKPOINT_MONITOR,
             mode=CHECKPOINT_MODE,
-            every_n_train_steps=100,
+            every_n_train_steps=CHECKPOINT_EVERY_N_TRAIN_STEPS,
         ),
     ]
 

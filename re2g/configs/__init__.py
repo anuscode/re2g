@@ -5,8 +5,8 @@ class Settings(BaseSettings):
 
     pretrained_model_name_or_path: str = "monologg/koelectra-base-v3-discriminator"
 
-    learning_rate: float = 1e-5
-    weight_decay: float = 1e-2
+    optimizer_learning_rate: float = 1e-5
+    optimizer_weight_decay: float = 1e-2
 
     context_max_length: int = 512
     context_padding: str = "longest"
@@ -19,15 +19,16 @@ class Settings(BaseSettings):
     datamodule_batch_size: int = 8
     dataloader_num_workers: int = 0
 
-    trainer_limit_train_batches: int = 100
     trainer_max_epochs: int = 1
-    trainer_limit_val_batches: int = 10
-    trainer_strategy: str = "auto"  # deepspeed_stage_2
+    trainer_limit_val_batches: int | float = 1.0
+    trainer_limit_train_batches: int | float = 1.0
+    trainer_strategy: str = "auto"  # deepspeed_stage_1
     trainer_precision: int = 32
 
     checkpoint_dirpath: str = "checkpoints"
     checkpoint_monitor: str = "val_loss"
     checkpoint_mode: str = "max"
+    checkpoint_every_n_train_steps: int = 500
 
 
 settings = Settings()
