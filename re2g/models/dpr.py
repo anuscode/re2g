@@ -84,18 +84,18 @@ class DPR(pl.LightningModule):
 
     def forward(
         self,
-        question_input_ids: torch.Tensor,
-        question_attention_mask: torch.Tensor,
+        query_input_ids: torch.Tensor,
+        query_attention_mask: torch.Tensor,
         context_input_ids: torch.Tensor,
         context_attention_mask: torch.Tensor,
     ):
-        question_embeddings = self.query_encoder(
-            question_input_ids, question_attention_mask
+        query_embeddings = self.query_encoder(
+            query_input_ids, query_attention_mask
         )
         context_embeddings = self.context_encoder(
             context_input_ids, context_attention_mask
         )
-        return question_embeddings, context_embeddings
+        return query_embeddings, context_embeddings
 
     def configure_optimizers(self):
         return torch.optim.AdamW(
@@ -105,15 +105,15 @@ class DPR(pl.LightningModule):
         )
 
     def training_step(self, batch, batch_idx):
-        question_input_ids = batch["question_input_ids"]
-        question_attention_mask = batch["question_attention_mask"]
+        query_input_ids = batch["query_input_ids"]
+        query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
-        batch_size = question_input_ids.shape[0]
+        batch_size = query_input_ids.shape[0]
 
         query_embeddings, context_embeddings = self(
-            question_input_ids,
-            question_attention_mask,
+            query_input_ids,
+            query_attention_mask,
             context_input_ids,
             context_attention_mask,
         )
@@ -130,15 +130,15 @@ class DPR(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        question_input_ids = batch["question_input_ids"]
-        question_attention_mask = batch["question_attention_mask"]
+        query_input_ids = batch["query_input_ids"]
+        query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
-        batch_size = question_input_ids.shape[0]
+        batch_size = query_input_ids.shape[0]
 
         query_embeddings, context_embeddings = self(
-            question_input_ids,
-            question_attention_mask,
+            query_input_ids,
+            query_attention_mask,
             context_input_ids,
             context_attention_mask,
         )

@@ -56,20 +56,20 @@ class SquadV1DataModule(LightningDataModule):
             truncation=True,
             return_tensors="pt",
         )
-        question_batch_encoding = self.tokenizer.batch_encode_plus(
+        query_batch_encoding = self.tokenizer.batch_encode_plus(
             [(item["question"]) for item in batch],
-            max_length=settings.question_max_length,
-            padding=settings.question_padding,
+            max_length=settings.query_max_length,
+            padding=settings.query_padding,
             truncation=True,
             return_tensors="pt",
         )
         contexts = [item["context"] for item in batch]
-        questions = [item["question"] for item in batch]
+        queries = [item["question"] for item in batch]
         return {
-            "question_input_ids": question_batch_encoding["input_ids"],
-            "question_attention_mask": question_batch_encoding["attention_mask"],
-            "question_token_type_ids": question_batch_encoding["token_type_ids"],
-            "questions": questions,
+            "query_input_ids": query_batch_encoding["input_ids"],
+            "query_attention_mask": query_batch_encoding["attention_mask"],
+            "query_token_type_ids": query_batch_encoding["token_type_ids"],
+            "queries": queries,
             "context_input_ids": context_batch_encoding["input_ids"],
             "context_attention_mask": context_batch_encoding["attention_mask"],
             "context_token_type_ids": context_batch_encoding["token_type_ids"],
