@@ -1,6 +1,5 @@
 import lightning as pl
 import torch
-import torch.nn.functional as F
 from torch import nn
 from transformers import ElectraModel
 
@@ -90,9 +89,7 @@ class DPR(pl.LightningModule):
         context_input_ids: torch.Tensor,
         context_attention_mask: torch.Tensor,
     ):
-        query_embeddings = self.query_encoder(
-            query_input_ids, query_attention_mask
-        )
+        query_embeddings = self.query_encoder(query_input_ids, query_attention_mask)
         context_embeddings = self.context_encoder(
             context_input_ids, context_attention_mask
         )
@@ -148,8 +145,8 @@ class DPR(pl.LightningModule):
         self.log(
             name="val_loss",
             value=loss,
-            on_step=True,
-            on_epoch=True,
+            on_step=False,
+            on_epoch=False,
             prog_bar=True,
             logger=True,
             sync_dist=True,
