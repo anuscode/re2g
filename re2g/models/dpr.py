@@ -64,6 +64,7 @@ class DPR(pl.LightningModule):
         return torch.optim.AdamW(self.parameters(), lr=1e-3)
 
     def training_step(self, batch, batch_idx):
+        batch_size = batch.shape[0]
         question_input_ids = batch["question_input_ids"]
         question_attention_mask = batch["question_attention_mask"]
         context_input_ids = batch["context_input_ids"]
@@ -75,10 +76,19 @@ class DPR(pl.LightningModule):
             context_attention_mask,
         )
         loss = self.loss(query_embeddings, context_embeddings)
-        self.log("train_loss", loss)
+        self.log(
+            name="train_loss",
+            value=loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=batch_size,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx):
+        batch_size = batch.shape[0]
         question_input_ids = batch["question_input_ids"]
         question_attention_mask = batch["question_attention_mask"]
         context_input_ids = batch["context_input_ids"]
@@ -97,6 +107,7 @@ class DPR(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            batch_size=batch_size,
         )
         return {"val_loss": loss}
 
