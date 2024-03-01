@@ -6,13 +6,20 @@ from transformers import ElectraModel
 
 
 class QueryEncoder(nn.Module):
-    def __init__(self, pretrained_model_name_or_path: str):
+    def __init__(
+        self, pretrained_model_name_or_path: str, num_trainable_layers: int = 2
+    ):
         super(QueryEncoder, self).__init__()
         self.electra = ElectraModel.from_pretrained(pretrained_model_name_or_path)
-        # TODO: Add Additional Layers
 
         for param in self.electra.parameters():
             param.requires_grad = False
+
+        for count, layer in enumerate(
+            self.electra.encoder.layer[-num_trainable_layers:]
+        ):
+            for param in layer.parameters():
+                param.requires_grad = True
 
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor = None):
         outputs = self.electra(
@@ -27,13 +34,20 @@ class QueryEncoder(nn.Module):
 
 
 class ContextEncoder(nn.Module):
-    def __init__(self, pretrained_model_name_or_path: str):
+    def __init__(
+        self, pretrained_model_name_or_path: str, num_trainable_layers: int = 2
+    ):
         super(ContextEncoder, self).__init__()
         self.electra = ElectraModel.from_pretrained(pretrained_model_name_or_path)
-        # TODO: Add Additional Layers
 
         for param in self.electra.parameters():
             param.requires_grad = False
+
+        for count, layer in enumerate(
+            self.electra.encoder.layer[-num_trainable_layers:]
+        ):
+            for param in layer.parameters():
+                param.requires_grad = True
 
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor = None):
         outputs = self.electra(
@@ -51,14 +65,22 @@ class DPR(pl.LightningModule):
     def __init__(
         self,
         pretrained_model_name_or_path: str,
+        query_num_trainable_layers: int = 2,
+        context_trainable_layers: int = 2,
         learning_rate: float = 1e-3,
         weight_decay: float = 1e-2,
     ):
         super(DPR, self).__init__()
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.query_encoder = QueryEncoder(pretrained_model_name_or_path)
-        self.context_encoder = ContextEncoder(pretrained_model_name_or_path)
+        self.query_encoder = QueryEncoder(
+            pretrained_model_name_or_path,
+            num_trainable_layers=query_num_trainable_layers,
+        )
+        self.context_encoder = ContextEncoder(
+            pretrained_model_name_or_path,
+            num_trainable_layers=context_trainable_layers,
+        )
 
     def forward(
         self,

@@ -10,9 +10,11 @@ class Settings(BaseSettings):
 
     context_max_length: int = 512
     context_padding: str = "longest"
+    context_num_trainable_layers: int = 2
 
     question_max_length: int = 512
     question_padding: str = "longest"
+    question_num_trainable_layers: int = 2
 
     datamodule_batch_size: int = 8
     dataloader_num_workers: int = 0
