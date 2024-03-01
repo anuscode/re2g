@@ -64,11 +64,12 @@ class DPR(pl.LightningModule):
         return torch.optim.AdamW(self.parameters(), lr=1e-3)
 
     def training_step(self, batch, batch_idx):
-        batch_size = batch.shape[0]
         question_input_ids = batch["question_input_ids"]
         question_attention_mask = batch["question_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
+        batch_size = question_input_ids.shape[0]
+
         query_embeddings, context_embeddings = self(
             question_input_ids,
             question_attention_mask,
@@ -88,11 +89,12 @@ class DPR(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        batch_size = batch.shape[0]
         question_input_ids = batch["question_input_ids"]
         question_attention_mask = batch["question_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
+        batch_size = question_input_ids.shape[0]
+
         query_embeddings, context_embeddings = self(
             question_input_ids,
             question_attention_mask,
