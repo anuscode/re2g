@@ -1,4 +1,9 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import lightning as L
+
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
@@ -6,6 +11,7 @@ import wandb
 from re2g.configs import settings
 from re2g.datasets.v1 import SquadV1DataModule
 from re2g.models.dpr import DPR
+
 
 PROJECT = "re2g"
 
@@ -31,6 +37,9 @@ CHECKPOINT_MODE = settings.checkpoint_mode
 
 
 def main():
+
+    for key, value in settings.dict().items():
+        print(f"{key}: {value}")
 
     dpr = DPR(MODEL_NAME)
 
