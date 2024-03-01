@@ -125,6 +125,7 @@ class DPR(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
             batch_size=batch_size,
         )
         return loss
@@ -150,6 +151,7 @@ class DPR(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
             batch_size=batch_size,
         )
         return {"val_loss": loss}
