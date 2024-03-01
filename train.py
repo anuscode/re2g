@@ -13,7 +13,15 @@ MODEL_NAME = settings.pretrained_model_name_or_path
 
 TRAINER_STRATEGY = settings.trainer_strategy
 
-BATCH_SIZE = settings.datamodule_batch_size
+TRAINER_PRECISION = settings.trainer_precision
+
+TRAINER_LIMIT_TRAIN_BATCHES = settings.trainer_limit_train_batches
+
+TRAINER_MAX_EPOCHS = settings.trainer_max_epochs
+
+TRAINER_LIMIT_VAL_BATCHES = settings.trainer_limit_val_batches
+
+DATAMODULE_BATCH_SIZE = settings.datamodule_batch_size
 
 CHECKPOINT_DIRPATH = settings.checkpoint_dirpath
 
@@ -33,7 +41,7 @@ def main():
 
     datamodule = SquadV1DataModule(
         pretrained_model_name_or_path=MODEL_NAME,
-        batch_size=BATCH_SIZE,
+        batch_size=DATAMODULE_BATCH_SIZE,
     )
 
     callbacks = [
@@ -46,11 +54,13 @@ def main():
     ]
 
     trainer = L.Trainer(
-        max_epochs=10,
+        limit_train_batches=TRAINER_LIMIT_TRAIN_BATCHES,
+        max_epochs=TRAINER_MAX_EPOCHS,
+        limit_val_batches=TRAINER_LIMIT_VAL_BATCHES,
         strategy=TRAINER_STRATEGY,
+        precision=TRAINER_PRECISION,
         logger=logger,
         callbacks=callbacks,
-        limit_val_batches=10,
     )
 
     trainer.fit(model=dpr, datamodule=datamodule)

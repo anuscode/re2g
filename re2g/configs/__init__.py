@@ -14,7 +14,11 @@ class Settings(BaseSettings):
     datamodule_batch_size: int = 8
     dataloader_num_workers: int = 0
 
-    trainer_strategy: str = "auto"
+    trainer_limit_train_batches: int = 100
+    trainer_max_epochs: int = 1
+    trainer_limit_val_batches: int = 10
+    trainer_strategy: str = "auto"  # deepspeed_stage_2
+    trainer_precision: int = 32
 
     checkpoint_dirpath: str = "checkpoints"
     checkpoint_monitor: str = "val_accuracy"
