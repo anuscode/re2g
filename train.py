@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    load_dotenv()
+except:
+    print("Failed to load .env files..")
 
 import lightning as L
 
@@ -52,19 +55,24 @@ CHECKPOINT_MODE = settings.checkpoint_mode
 
 CHECKPOINT_EVERY_N_TRAIN_STEPS = settings.checkpoint_every_n_train_steps
 
+CHECKPOINT_FOR_RESUME = settings.checkpoint_for_resume
+
 
 def main():
 
     for key, value in settings.dict().items():
         print(f"{key}: {value}")
 
-    dpr = DPR(
-        pretrained_model_name_or_path=MODEL_NAME,
-        num_query_trainable_layers=NUM_QUERY_TRAINABLE_LAYERS,
-        num_context_trainable_layers=NUM_CONTEXT_TRAINABLE_LAYERS,
-        learning_rate=OPTIMIZER_LEARNING_RATE,
-        weight_decay=OPTIMIZER_WEIGHT_DECAY,
-    )
+    if CHECKPOINT_FOR_RESUME is not None:
+        dpr = DPR.load_from_checkpoint(CHECKPOINT_FOR_RESUME)
+    else:
+        dpr = DPR(
+            pretrained_model_name_or_path=MODEL_NAME,
+            num_query_trainable_layers=NUM_QUERY_TRAINABLE_LAYERS,
+            num_context_trainable_layers=NUM_CONTEXT_TRAINABLE_LAYERS,
+            learning_rate=OPTIMIZER_LEARNING_RATE,
+            weight_decay=OPTIMIZER_WEIGHT_DECAY,
+        )
 
     wandb.init(project=PROJECT, config=dpr.hparams)
     wandb.watch(dpr, log="all", log_freq=1)
