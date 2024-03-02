@@ -1,6 +1,7 @@
 import lightning as pl
 import numpy as np
 import torch
+from lightning.pytorch.utilities import grad_norm
 from torch import nn
 from transformers import ElectraModel
 
@@ -189,6 +190,11 @@ class DPR(pl.LightningModule):
             batch_size=batch_size,
         )
         return {"mrr": mrr}
+
+    # def on_before_optimizer_step(self, optimizer):
+    #     norms = grad_norm(self.layer, norm_type=2)
+    #     self.log_dict(norms)
+    # trainer = Trainer(detect_anomaly=True)
 
     def loss(
         self,

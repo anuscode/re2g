@@ -1,5 +1,3 @@
-import random
-
 from datasets import load_dataset
 from datasets.utils.typing import PathLike
 from lightning import LightningDataModule

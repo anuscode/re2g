@@ -8,8 +8,8 @@ except:
 import lightning as L
 
 from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import ModelSummary
 from lightning.pytorch.loggers import WandbLogger
-
 import wandb
 from re2g.configs import settings
 from re2g.datasets.v1 import SquadV1DataModule
@@ -91,6 +91,7 @@ def main():
             mode=CHECKPOINT_MODE,
             every_n_train_steps=CHECKPOINT_EVERY_N_TRAIN_STEPS,
         ),
+        ModelSummary(max_depth=-1),
     ]
 
     trainer = L.Trainer(
