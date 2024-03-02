@@ -1,4 +1,5 @@
 import lightning as pl
+import numpy as np
 import torch
 from torch import nn
 from transformers import ElectraModel
@@ -64,8 +65,8 @@ class DPR(pl.LightningModule):
     def __init__(
         self,
         pretrained_model_name_or_path: str,
-        query_num_trainable_layers: int = 2,
-        context_trainable_layers: int = 2,
+        num_query_trainable_layers: int = 2,
+        num_context_trainable_layers: int = 2,
         learning_rate: float = 1e-3,
         weight_decay: float = 1e-2,
     ):
@@ -74,11 +75,11 @@ class DPR(pl.LightningModule):
         self.weight_decay = weight_decay
         self.query_encoder = QueryEncoder(
             pretrained_model_name_or_path,
-            num_trainable_layers=query_num_trainable_layers,
+            num_trainable_layers=num_query_trainable_layers,
         )
         self.context_encoder = ContextEncoder(
             pretrained_model_name_or_path,
-            num_trainable_layers=context_trainable_layers,
+            num_trainable_layers=num_context_trainable_layers,
         )
         self.criteria = nn.CrossEntropyLoss()
 
@@ -149,6 +150,46 @@ class DPR(pl.LightningModule):
         )
         return {"val_loss": loss}
 
+    def test_step(self, batch: dict[str, torch.Tensor], batch_idx: int):
+        """Calculate Mean Reciprocal Rank (MRR)"""
+        query_input_ids = batch["query_input_ids"]
+        query_attention_mask = batch["query_attention_mask"]
+        context_input_ids = batch["context_input_ids"]
+        context_attention_mask = batch["context_attention_mask"]
+        batch_size = query_input_ids.shape[0]
+
+        query_embeddings, context_embeddings = self.forward(
+            query_input_ids,
+            query_attention_mask,
+            context_input_ids,
+            context_attention_mask,
+        )
+        similarity_scores = torch.matmul(context_embeddings, query_embeddings.t())
+        similarity_scores = similarity_scores.cpu().detach().numpy()
+
+        def calculate_mrr(scores_matrix: np.ndarray) -> float:
+            """Calculate Mean Reciprocal Rank (MRR)"""
+            acc = 0.0
+            for i in range(scores_matrix.shape[0]):
+                scores = scores_matrix[i]
+                scores = np.argsort(-scores)
+                for j, rank in enumerate(scores):
+                    if rank == i:
+                        acc += 1 / (j + 1)
+                        break
+            m = acc / scores_matrix.shape[0]
+            return m
+
+        mrr = calculate_mrr(similarity_scores)
+        self.log(
+            name="mrr",
+            value=mrr,
+            logger=True,
+            sync_dist=True,
+            batch_size=batch_size,
+        )
+        return {"mrr": mrr}
+
     def loss(
         self,
         query_embeddings: torch.Tensor,
@@ -157,7 +198,9 @@ class DPR(pl.LightningModule):
         query_embeddings_t = query_embeddings.transpose(0, 1)
         similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
         labels = torch.arange(
-            similarity_scores.size(0), device=query_embeddings.device, dtype=torch.long
+            similarity_scores.size(0),
+            device=query_embeddings.device,
+            dtype=torch.long,
         )
         loss = self.criteria(similarity_scores, labels)
         return loss

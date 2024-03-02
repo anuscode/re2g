@@ -18,6 +18,10 @@ PROJECT = "re2g"
 # Models
 MODEL_NAME = settings.pretrained_model_name_or_path
 
+NUM_QUERY_TRAINABLE_LAYERS = settings.context_num_trainable_layers
+
+NUM_CONTEXT_TRAINABLE_LAYERS = settings.query_num_trainable_layers
+
 # Optimizers
 OPTIMIZER_LEARNING_RATE = settings.optimizer_learning_rate
 
@@ -30,9 +34,11 @@ TRAINER_PRECISION = settings.trainer_precision
 
 TRAINER_LIMIT_TRAIN_BATCHES = settings.trainer_limit_train_batches
 
-TRAINER_MAX_EPOCHS = settings.trainer_max_epochs
-
 TRAINER_LIMIT_VAL_BATCHES = settings.trainer_limit_val_batches
+
+TRAINER_LIMIT_TEST_BATCHES = settings.trainer_limit_test_batches
+
+TRAINER_MAX_EPOCHS = settings.trainer_max_epochs
 
 # DataModules
 DATAMODULE_BATCH_SIZE = settings.datamodule_batch_size
@@ -54,6 +60,8 @@ def main():
 
     dpr = DPR(
         pretrained_model_name_or_path=MODEL_NAME,
+        num_query_trainable_layers=NUM_QUERY_TRAINABLE_LAYERS,
+        num_context_trainable_layers=NUM_CONTEXT_TRAINABLE_LAYERS,
         learning_rate=OPTIMIZER_LEARNING_RATE,
         weight_decay=OPTIMIZER_WEIGHT_DECAY,
     )
@@ -79,8 +87,9 @@ def main():
 
     trainer = L.Trainer(
         limit_train_batches=TRAINER_LIMIT_TRAIN_BATCHES,
-        max_epochs=TRAINER_MAX_EPOCHS,
         limit_val_batches=TRAINER_LIMIT_VAL_BATCHES,
+        limit_test_batches=TRAINER_LIMIT_TEST_BATCHES,
+        max_epochs=TRAINER_MAX_EPOCHS,
         strategy=TRAINER_STRATEGY,
         precision=TRAINER_PRECISION,
         logger=logger,

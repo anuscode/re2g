@@ -1,3 +1,5 @@
+import random
+
 from datasets import load_dataset
 from datasets.utils.typing import PathLike
 from lightning import LightningDataModule
@@ -5,6 +7,8 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import ElectraTokenizer
 
 from re2g.configs import settings
+
+DATALOADER_NUM_WORKERS = settings.dataloader_num_workers
 
 
 class SquadV1Dataset(Dataset):
@@ -28,24 +32,36 @@ class SquadV1DataModule(LightningDataModule):
         self.batch_size = batch_size
         self.squad_train = SquadV1Dataset(data_type="train")
         self.squad_val = SquadV1Dataset(data_type="validation")
+        self.squad_test = SquadV1Dataset(data_type="validation")
         self.tokenizer = ElectraTokenizer.from_pretrained(pretrained_model_name_or_path)
+
+        # self.squad_train.dataset = self.squad_train.dataset[:100]
+        self.squad_val.dataset.shuffle()
+        self.squad_test.dataset.shuffle()
 
     def train_dataloader(self):
         return DataLoader(
             self.squad_train,
-            batch_size=self.batch_size,
             shuffle=True,
+            batch_size=self.batch_size,
             collate_fn=self._collate_fn,
-            num_workers=settings.dataloader_num_workers,
+            num_workers=DATALOADER_NUM_WORKERS,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.squad_val,
             batch_size=self.batch_size,
-            shuffle=True,
             collate_fn=self._collate_fn,
-            num_workers=settings.dataloader_num_workers,
+            num_workers=DATALOADER_NUM_WORKERS,
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.squad_test,
+            batch_size=self.batch_size,
+            collate_fn=self._collate_fn,
+            num_workers=DATALOADER_NUM_WORKERS,
         )
 
     def _collate_fn(self, batch: list[dict]):
