@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     datamodule_batch_size: int = 8
     dataloader_num_workers: int = 0
 
-    trainer_max_epochs: int = 1
+    trainer_max_epochs: int = 100
     trainer_limit_val_batches: int | float = 1.0
     trainer_limit_train_batches: int | float = 1.0
     trainer_limit_test_batches: int | float = 1.0
