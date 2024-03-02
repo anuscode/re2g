@@ -102,7 +102,7 @@ class DPR(pl.LightningModule):
             weight_decay=self.weight_decay,
         )
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int):
         query_input_ids = batch["query_input_ids"]
         query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
@@ -128,7 +128,7 @@ class DPR(pl.LightningModule):
         )
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int):
         query_input_ids = batch["query_input_ids"]
         query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
@@ -145,16 +145,17 @@ class DPR(pl.LightningModule):
         self.log(
             name="val_loss",
             value=loss,
-            on_step=False,
-            on_epoch=False,
-            prog_bar=True,
             logger=True,
             sync_dist=True,
             batch_size=batch_size,
         )
         return {"val_loss": loss}
 
-    def loss(self, query_embeddings, context_embeddings) -> torch.Tensor:
+    def loss(
+        self,
+        query_embeddings: torch.Tensor,
+        context_embeddings: torch.Tensor,
+    ) -> torch.Tensor:
         query_embeddings_t = query_embeddings.transpose(0, 1)
         similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
         labels = torch.arange(
