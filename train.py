@@ -63,7 +63,7 @@ def main():
     for key, value in settings.dict().items():
         print(f"{key}: {value}")
 
-    if CHECKPOINT_FOR_RESUME is not None:
+    if CHECKPOINT_FOR_RESUME:
         dpr = DPR.load_from_checkpoint(CHECKPOINT_FOR_RESUME)
     else:
         dpr = DPR(
