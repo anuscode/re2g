@@ -102,7 +102,6 @@ def main():
         callbacks=callbacks,
     )
 
-    trainer.validate(model=dpr, datamodule=datamodule, ckpt_path=CHECKPOINT_FOR_RESUME)
     trainer.fit(model=dpr, datamodule=datamodule, ckpt_path=CHECKPOINT_FOR_RESUME)
 
 
