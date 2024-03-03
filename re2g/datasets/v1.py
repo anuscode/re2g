@@ -49,6 +49,7 @@ class SquadV1DataModule(LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             self.squad_val,
+            shuffle=True,
             batch_size=self.batch_size,
             collate_fn=self._collate_fn,
             num_workers=DATALOADER_NUM_WORKERS,
@@ -57,6 +58,7 @@ class SquadV1DataModule(LightningDataModule):
     def test_dataloader(self):
         return DataLoader(
             self.squad_test,
+            shuffle=True,
             batch_size=self.batch_size,
             collate_fn=self._collate_fn,
             num_workers=DATALOADER_NUM_WORKERS,
