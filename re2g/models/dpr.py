@@ -155,6 +155,7 @@ class DPR(pl.LightningModule):
             value=mrr,
             logger=True,
             sync_dist=True,
+            batch_size=batch_size,
         )
         return {"val_loss": loss, "mrr": mrr}
 
