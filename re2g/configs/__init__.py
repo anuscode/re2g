@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     query_padding: str = "longest"
     query_num_trainable_layers: int = 2
 
+    rerank_max_length: int = 512
+    rerank_padding: str = "longest"
+    rerank_num_trainable_layers: int = 2
+
     datamodule_batch_size: int = 8
     dataloader_num_workers: int = 0
 

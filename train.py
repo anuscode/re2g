@@ -12,9 +12,8 @@ from lightning.pytorch.callbacks import ModelSummary
 from lightning.pytorch.loggers import WandbLogger
 import wandb
 from re2g.configs import settings
-from re2g.datasets.v1 import SquadV1DataModule
+from re2g.datasets.v1 import DprSquadDataModule
 from re2g.models.dpr import DPR
-
 
 PROJECT = "re2g"
 
@@ -76,7 +75,7 @@ def main():
 
     logger = WandbLogger(log_model="all")
 
-    datamodule = SquadV1DataModule(
+    dpr_datamodule = DprSquadDataModule(
         pretrained_model_name_or_path=MODEL_NAME,
         batch_size=DATAMODULE_BATCH_SIZE,
     )
@@ -102,7 +101,7 @@ def main():
         callbacks=callbacks,
     )
 
-    trainer.fit(model=dpr, datamodule=datamodule, ckpt_path=CHECKPOINT_FOR_RESUME)
+    trainer.fit(model=dpr, datamodule=dpr_datamodule, ckpt_path=CHECKPOINT_FOR_RESUME)
 
 
 if __name__ == "__main__":

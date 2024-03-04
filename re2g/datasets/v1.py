@@ -8,8 +8,20 @@ from re2g.configs import settings
 
 DATALOADER_NUM_WORKERS = settings.dataloader_num_workers
 
+QUERY_MAX_LENGTH = settings.query_max_length
 
-class SquadV1Dataset(Dataset):
+QUERY_PADDING = settings.query_padding
+
+CONTEXT_MAX_LENGTH = settings.context_max_length
+
+CONTEXT_PADDING = settings.context_padding
+
+RERANK_MAX_LENGTH = settings.rerank_max_length
+
+RERANK_PADDING = settings.rerank_padding
+
+
+class SquadDataset(Dataset):
     def __init__(self, data_type: str = "train"):
         self.dataset = load_dataset("squad_kor_v1")[data_type]
 
@@ -22,15 +34,15 @@ class SquadV1Dataset(Dataset):
         return self.dataset[idx]
 
 
-class SquadV1DataModule(LightningDataModule):
+class DprSquadDataModule(LightningDataModule):
     def __init__(
         self, pretrained_model_name_or_path: str | PathLike, batch_size: int = 128
     ):
         super().__init__()
         self.batch_size = batch_size
-        self.squad_train = SquadV1Dataset(data_type="train")
-        self.squad_val = SquadV1Dataset(data_type="validation")
-        self.squad_test = SquadV1Dataset(data_type="validation")
+        self.squad_train = SquadDataset(data_type="train")
+        self.squad_val = SquadDataset(data_type="validation")
+        self.squad_test = SquadDataset(data_type="validation")
         self.tokenizer = ElectraTokenizer.from_pretrained(pretrained_model_name_or_path)
 
         # self.squad_train.dataset = self.squad_train.dataset[:100]
@@ -67,15 +79,15 @@ class SquadV1DataModule(LightningDataModule):
     def _collate_fn(self, batch: list[dict]):
         context_batch_encoding = self.tokenizer.batch_encode_plus(
             [(item["context"]) for item in batch],
-            max_length=settings.context_max_length,
-            padding=settings.context_padding,
+            max_length=CONTEXT_MAX_LENGTH,
+            padding=CONTEXT_PADDING,
             truncation=True,
             return_tensors="pt",
         )
         query_batch_encoding = self.tokenizer.batch_encode_plus(
             [(item["question"]) for item in batch],
-            max_length=settings.query_max_length,
-            padding=settings.query_padding,
+            max_length=QUERY_MAX_LENGTH,
+            padding=QUERY_PADDING,
             truncation=True,
             return_tensors="pt",
         )
@@ -89,5 +101,66 @@ class SquadV1DataModule(LightningDataModule):
             "context_input_ids": context_batch_encoding["input_ids"],
             "context_attention_mask": context_batch_encoding["attention_mask"],
             "context_token_type_ids": context_batch_encoding["token_type_ids"],
+            "contexts": contexts,
+        }
+
+
+class RerankSquadDataModule(LightningDataModule):
+    def __init__(
+        self, pretrained_model_name_or_path: str | PathLike, batch_size: int = 128
+    ):
+        super().__init__()
+        self.batch_size = batch_size
+        self.squad_train = SquadDataset(data_type="train")
+        self.squad_val = SquadDataset(data_type="validation")
+        self.squad_test = SquadDataset(data_type="validation")
+        self.tokenizer = ElectraTokenizer.from_pretrained(pretrained_model_name_or_path)
+
+        # self.squad_train.dataset = self.squad_train.dataset[:100]
+        self.squad_val.dataset.shuffle()
+        self.squad_test.dataset.shuffle()
+
+    def train_dataloader(self):
+        return DataLoader(
+            self.squad_train,
+            shuffle=True,
+            batch_size=self.batch_size,
+            collate_fn=self._collate_fn,
+            num_workers=DATALOADER_NUM_WORKERS,
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            self.squad_val,
+            shuffle=True,
+            batch_size=self.batch_size,
+            collate_fn=self._collate_fn,
+            num_workers=DATALOADER_NUM_WORKERS,
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.squad_test,
+            shuffle=True,
+            batch_size=self.batch_size,
+            collate_fn=self._collate_fn,
+            num_workers=DATALOADER_NUM_WORKERS,
+        )
+
+    def _collate_fn(self, batch: list[dict]):
+        batch_encoding = self.tokenizer.batch_encode_plus(
+            [(item["question"], item["context"]) for item in batch],
+            max_length=CONTEXT_MAX_LENGTH,
+            padding=CONTEXT_PADDING,
+            truncation=True,
+            return_tensors="pt",
+        )
+        queries = [item["question"] for item in batch]
+        contexts = [item["context"] for item in batch]
+        return {
+            "input_ids": batch_encoding["input_ids"],
+            "attention_mask": batch_encoding["attention_mask"],
+            "token_type_ids": batch_encoding["token_type_ids"],
+            "queries": queries,
             "contexts": contexts,
         }
