@@ -65,3 +65,17 @@ wandb login
 python train.py
 ```
 - make sure to use the correct python version, if you have multiple python versions installed.
+
+## 3. Training Result
+
+#### 8 Epoch results images are as below. (Not yet done)
+
+![Train Loss](./assets/train_loss.png "Train Loss")
+- The training loss is expected to converge around the level of 0.5.
+
+![Val MRR](./assets/mrr.png "MRR")
+- Among 64 batches, it ranks on average within the top 2.
+- Currently, based on the results at 8 epochs, additional training is anticipated to further improve the metrics.
+
+![Val Loss](./assets/val_loss.png "Validation Loss")
+- It seems necessary to observe further to determine whether the validation loss will converge.
