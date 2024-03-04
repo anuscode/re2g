@@ -61,8 +61,8 @@ class Rerank(L.LightningModule):
         self.num_trainable_layers = num_trainable_layers
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.save_hyperparameters()
         self.reranker = ReRanker(pretrained_model_name_or_path, num_trainable_layers)
+        self.save_hyperparameters()
 
     def forward(self, input_ids, attention_mask):
         scores = self.reranker(input_ids, attention_mask)

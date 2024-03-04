@@ -83,6 +83,7 @@ class DPR(pl.LightningModule):
             num_trainable_layers=num_context_trainable_layers,
         )
         self.criteria = nn.CrossEntropyLoss()
+        self.save_hyperparameters()
 
     def forward(
         self,
