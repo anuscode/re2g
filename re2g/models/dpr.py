@@ -184,7 +184,9 @@ class DPR(pl.LightningModule):
         return loss
 
     @staticmethod
-    def calculate_mrr(context_embeddings: torch.Tensor, query_embeddings: torch.Tensor) -> float:
+    def calculate_mrr(
+        context_embeddings: torch.Tensor, query_embeddings: torch.Tensor
+    ) -> float:
         """Calculate Mean Reciprocal Rank (MRR)"""
 
         similarity_scores = torch.matmul(context_embeddings, query_embeddings.t())
