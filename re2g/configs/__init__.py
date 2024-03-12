@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     checkpoint_monitor: str = "mrr"
     checkpoint_mode: str = "max"
     checkpoint_every_n_train_steps: int = 0
-    checkpoint_for_resume: str | None = "last"
+    ckpt_path: str | None = "last"
 
 
 settings = Settings()

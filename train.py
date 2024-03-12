@@ -54,7 +54,7 @@ CHECKPOINT_MODE = settings.checkpoint_mode
 
 CHECKPOINT_EVERY_N_TRAIN_STEPS = settings.checkpoint_every_n_train_steps
 
-CHECKPOINT_FOR_RESUME = settings.checkpoint_for_resume or None
+CKPT_PATH = settings.ckpt_path or None
 
 
 def main():
@@ -101,7 +101,7 @@ def main():
         callbacks=callbacks,
     )
 
-    trainer.fit(model=dpr, datamodule=dpr_datamodule, ckpt_path=CHECKPOINT_FOR_RESUME)
+    trainer.fit(model=dpr, datamodule=dpr_datamodule, ckpt_path=CKPT_PATH)
 
 
 if __name__ == "__main__":
