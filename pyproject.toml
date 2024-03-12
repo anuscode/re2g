@@ -17,6 +17,8 @@ pydantic-settings = "^2.2.1"
 lightning = "^2.2.0.post0"
 wandb = "^0.16.3"
 python-dotenv = "^1.0.1"
+langchain = "^0.1.11"
+rank-bm25 = "^0.2.2"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.1.0"

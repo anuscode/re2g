@@ -9,15 +9,15 @@ class Settings(BaseSettings):
     optimizer_weight_decay: float = 1e-2
 
     context_max_length: int = 512
-    context_padding: str = "longest"
+    context_padding: str = "max_length"
     context_num_trainable_layers: int = 2
 
     query_max_length: int = 512
-    query_padding: str = "longest"
+    query_padding: str = "max_length"
     query_num_trainable_layers: int = 2
 
     rerank_max_length: int = 512
-    rerank_padding: str = "longest"
+    rerank_padding: str = "max_length"
     rerank_num_trainable_layers: int = 2
 
     datamodule_batch_size: int = 8
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     checkpoint_monitor: str = "mrr"
     checkpoint_mode: str = "max"
     checkpoint_every_n_train_steps: int = 0
-    checkpoint_for_resume: str | None = None
+    checkpoint_for_resume: str | None = "last"
 
 
 settings = Settings()
