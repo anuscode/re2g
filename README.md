@@ -49,7 +49,7 @@ CHECKPOINT_EVERY_N_TRAIN_STEPS=0
 CHECKPOINT_DIRPATH=checkpoints
 CHECKPOINT_MONITOR=mrr
 CHECKPOINT_MODE=max
-CHECKPOINT_FOR_RESUME=
+CKPT_PATH=
 ```
 
 #### Log-in to wandb before training the model.
