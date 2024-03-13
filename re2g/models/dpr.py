@@ -96,7 +96,9 @@ class DPR(pl.LightningModule):
         context_embeddings = self.context_encoder(
             context_input_ids, context_attention_mask
         )
-        return query_embeddings, context_embeddings
+        query_embeddings_t = query_embeddings.transpose(0, 1)
+        similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
+        return similarity_scores, query_embeddings, context_embeddings
 
     def configure_optimizers(self):
         return torch.optim.AdamW(
@@ -112,13 +114,13 @@ class DPR(pl.LightningModule):
         context_attention_mask = batch["context_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        query_embeddings, context_embeddings = self.forward(
+        scores, query_embeddings, context_embeddings = self.forward(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
             context_attention_mask,
         )
-        loss = self.loss(query_embeddings, context_embeddings)
+        loss = self.loss(scores)
         self.log(
             name="train_loss",
             value=loss,
@@ -136,14 +138,14 @@ class DPR(pl.LightningModule):
         context_attention_mask = batch["context_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        query_embeddings, context_embeddings = self.forward(
+        scores, query_embeddings, context_embeddings = self.forward(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
             context_attention_mask,
         )
-        loss = self.loss(query_embeddings, context_embeddings)
-        mrr = self.calculate_mrr(query_embeddings, context_embeddings)
+        loss = self.loss(scores)
+        mrr = self.calculate_mrr(scores)
         self.log(
             name="val_loss",
             value=loss,
@@ -169,37 +171,24 @@ class DPR(pl.LightningModule):
     #     self.log_dict(norms)
     # trainer = Trainer(detect_anomaly=True)
 
-    def loss(
-        self,
-        query_embeddings: torch.Tensor,
-        context_embeddings: torch.Tensor,
-    ) -> torch.Tensor:
-        query_embeddings_t = query_embeddings.transpose(0, 1)
-        similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
-        labels = torch.arange(
-            similarity_scores.size(0),
-            device=query_embeddings.device,
-            dtype=torch.long,
-        )
-        loss = self.criteria(similarity_scores, labels)
+    def loss(self, scores: torch.Tensor) -> torch.Tensor:
+        labels = torch.arange(scores.size(0), device=scores.device, dtype=torch.long)
+        loss = self.criteria(scores, labels)
         return loss
 
     @staticmethod
-    def calculate_mrr(
-        context_embeddings: torch.Tensor, query_embeddings: torch.Tensor
-    ) -> float:
+    def calculate_mrr(scores: torch.Tensor) -> float:
         """Calculate Mean Reciprocal Rank (MRR)"""
 
-        similarity_scores = torch.matmul(context_embeddings, query_embeddings.t())
-        similarity_scores = similarity_scores.cpu().detach().numpy()
+        scores_mat = scores.cpu().detach().numpy()
 
         acc = 0.0
-        for i in range(similarity_scores.shape[0]):
-            scores = similarity_scores[i]
+        for i in range(scores_mat.shape[0]):
+            scores = scores_mat[i]
             scores = np.argsort(-scores)
             for j, rank in enumerate(scores):
                 if rank == i:
                     acc += 1 / (j + 1)
                     break
-        m = acc / similarity_scores.shape[0]
+        m = acc / scores.shape[0]
         return m
