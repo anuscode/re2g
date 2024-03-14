@@ -1,10 +1,10 @@
-from re2g.datasets.v1 import RerankSquadDataModule
+from re2g.datasets.v1 import DprDataModule
 
 PRETRAINED_MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
 
 
-def test_rerank_squad_data_module():
-    data_module = RerankSquadDataModule(
+def test_dpr_data_module():
+    data_module = DprDataModule(
         pretrained_model_name_or_path=PRETRAINED_MODEL_NAME,
         batch_size=8,
     )

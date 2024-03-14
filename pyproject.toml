@@ -19,6 +19,7 @@ wandb = "^0.16.3"
 python-dotenv = "^1.0.1"
 langchain = "^0.1.11"
 rank-bm25 = "^0.2.2"
+chromadb = "^0.4.24"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.1.0"
@@ -54,3 +55,9 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+minversion = 6.0
+addopts = ["-ra", "-q"]
+testpaths = ["tests"]

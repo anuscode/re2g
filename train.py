@@ -12,7 +12,7 @@ from lightning.pytorch.callbacks import ModelSummary
 from lightning.pytorch.loggers import WandbLogger
 import wandb
 from re2g.configs import settings
-from re2g.datasets.v1 import DprSquadDataModule
+from re2g.datasets.v1 import DprDataModule
 from re2g.models.dpr import DPR
 
 PROJECT = "re2g"
@@ -79,7 +79,7 @@ def main():
 
     logger = WandbLogger(log_model="all")
 
-    dpr_datamodule = DprSquadDataModule(
+    dpr_datamodule = DprDataModule(
         pretrained_model_name_or_path=MODEL_NAME,
         batch_size=DATAMODULE_BATCH_SIZE,
         bm25_k=DATAMODULE_DPR_BM25_K,

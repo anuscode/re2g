@@ -1,9 +1,9 @@
 from re2g import datasets
-from re2g.datasets.v1 import SquadDataset
+from re2g.datasets.v1 import DprDataset, SquadDataset
 
 
 def test_squad_kor_v1_dataset():
-    assert datasets.v1.SquadDataset.example() == {
+    assert datasets.v1.DprDataset.example() == {
         "id": "6521755-3-1",
         "title": "알렉산더_헤이그",
         "context": '그의 편에 헤이그는 지구촌의 논점들의 국내적 정치 노력들에 관해서만 근심한 레이건의 가까운 조언자들을 "외교 정책의 아마추어"로 묘사하였다. 1982년 6월 25일 결국적으로 온 그의 국무장관으로서 사임은 불가능한 상황이 된 것을 끝냈다. 헤이그는 개인적 생활로 돌아갔다가 1988년 대통령 선거를 위한 공화당 후보직을 안정시키는 시도를 하는 데 충분하게 정계로 돌아갔으나 후보직을 이기는 데 성원을 가지지 않았다. 그는 외교 정책 논쟁들에 연설자로서 활동적으로 남아있었으나 그의 전념은 정치에서 개인적 생활로 옮겨졌다. 그는 Worldwide Associates Inc.의 국제적 상담 회사에 의하여 기용되었고, 그 기구의 의장과 회장이 되었다.',
@@ -18,35 +18,23 @@ def test_squad_kor_v1_dataset():
     }
 
 
-def test_squad_dataset_with_including_bm25_gold_True():
-    squad_dataset = datasets.v1.SquadDataset(
-        including_bm25_gold=True,
-        split="validation",
-    )
-    assert isinstance(squad_dataset, SquadDataset)
-    assert squad_dataset.including_bm25_gold is True
-    assert any(squad_dataset[0]["bm25_labels"]) is True
-    assert any(squad_dataset[1]["bm25_labels"]) is True
-    assert any(squad_dataset[2]["bm25_labels"]) is True
-    assert any(squad_dataset[3]["bm25_labels"]) is True
-    assert squad_dataset[0]["context"] in squad_dataset[0]["bm25_contexts"]
-    assert squad_dataset[1]["context"] in squad_dataset[1]["bm25_contexts"]
-    assert squad_dataset[2]["context"] in squad_dataset[2]["bm25_contexts"]
-    assert squad_dataset[3]["context"] in squad_dataset[3]["bm25_contexts"]
+def test_dpr_dataset():
+    squad_dataset = SquadDataset(split="validation")
+    dpr_dataset = datasets.v1.DprDataset(dataset=squad_dataset, bm25_k=4)
 
+    assert isinstance(dpr_dataset, DprDataset)
 
-def test_squad_dataset_with_including_bm25_gold_False():
-    squad_dataset = datasets.v1.SquadDataset(
-        including_bm25_gold=False,
-        split="validation",
-    )
-    assert isinstance(squad_dataset, SquadDataset)
-    assert squad_dataset.including_bm25_gold is False
-    assert any(squad_dataset[0]["bm25_labels"]) is False
-    assert any(squad_dataset[1]["bm25_labels"]) is False
-    assert any(squad_dataset[2]["bm25_labels"]) is False
-    assert any(squad_dataset[3]["bm25_labels"]) is False
-    assert squad_dataset[0]["context"] not in squad_dataset[0]["bm25_contexts"]
-    assert squad_dataset[1]["context"] not in squad_dataset[1]["bm25_contexts"]
-    assert squad_dataset[2]["context"] not in squad_dataset[2]["bm25_contexts"]
-    assert squad_dataset[3]["context"] not in squad_dataset[3]["bm25_contexts"]
+    assert any(dpr_dataset[0]["bm25_labels"]) is False
+    assert any(dpr_dataset[1]["bm25_labels"]) is False
+    assert any(dpr_dataset[2]["bm25_labels"]) is False
+    assert any(dpr_dataset[3]["bm25_labels"]) is False
+
+    assert dpr_dataset[0]["context"] not in dpr_dataset[0]["bm25_contexts"]
+    assert dpr_dataset[1]["context"] not in dpr_dataset[1]["bm25_contexts"]
+    assert dpr_dataset[2]["context"] not in dpr_dataset[2]["bm25_contexts"]
+    assert dpr_dataset[3]["context"] not in dpr_dataset[3]["bm25_contexts"]
+
+    assert len(dpr_dataset[0]["bm25_contexts"]) == 4
+    assert len(dpr_dataset[1]["bm25_contexts"]) == 4
+    assert len(dpr_dataset[2]["bm25_contexts"]) == 4
+    assert len(dpr_dataset[3]["bm25_contexts"]) == 4
