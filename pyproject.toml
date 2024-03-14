@@ -6,7 +6,7 @@ authors = ["nelly <yongwoo@crowdworks.kr>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9.0"
 transformers = "^4.38.1"
 torch = "^2.2.1"
 black = "^24.2.0"
