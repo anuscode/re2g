@@ -25,10 +25,13 @@ RERANK_PADDING = settings.rerank_padding
 
 
 class SquadDataset(Dataset):
-    def __init__(self, split: str = "train", bm25_k: int = 64):
+    def __init__(
+        self, split: str = "train", bm25_k: int = 64, including_bm25_gold: bool = False
+    ):
         self.bm25_k = bm25_k
         self.dataset = load_dataset("squad_kor_v1", split=split)
-        self.bm25 = self.build_bm25(self.dataset, k=self.bm25_k)
+        self.bm25 = self.build_bm25(self.dataset, k=self.bm25_k + 1)
+        self.including_bm25_gold = including_bm25_gold
 
     def shuffle(self, seed: int = 69):
         self.dataset = self.dataset.shuffle(seed=seed)
@@ -73,6 +76,11 @@ class SquadDataset(Dataset):
         item = self.dataset[idx]
         title, context, question = item["title"], item["context"], item["question"]
         bm25_documents = self.bm25.get_relevant_documents(question)
+
+        if not self.including_bm25_gold:
+            bm25_documents = [x for x in bm25_documents if title != x.metadata["title"]]
+
+        bm25_documents = bm25_documents[: self.bm25_k]
         bm25_contexts = [x.page_content for x in bm25_documents]
         bm25_labels = [int(title == x.metadata["title"]) for x in bm25_documents]
         item["bm25_contexts"] = bm25_contexts
@@ -85,17 +93,21 @@ class DprSquadDataModule(LightningDataModule):
         self,
         pretrained_model_name_or_path: str | PathLike,
         batch_size: int = 128,
+        bm25_k: int = 64,
         seed: int = 69,
     ):
         super().__init__()
         self.batch_size = batch_size
+        self.bm25_k = bm25_k
         self.tokenizer = ElectraTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.seed = seed
 
-        # lazy loading
-        self.train_dataset = SquadDataset(split="train")
-
-        self.val_dataset = SquadDataset(split="validation")
+        self.train_dataset = SquadDataset(
+            split="train", bm25_k=self.bm25_k, including_bm25_gold=False
+        )
+        self.val_dataset = SquadDataset(
+            split="validation", bm25_k=self.bm25_k, including_bm25_gold=False
+        )
         self.val_dataset.shuffle(seed=self.seed)
 
     def prepare_data(self):

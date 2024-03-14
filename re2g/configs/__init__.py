@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     rerank_padding: str = "max_length"
     rerank_num_trainable_layers: int = 2
 
-    datamodule_batch_size: int = 8
+    datamodule_batch_size: int = 128
+    datamodule_dpr_bm25_k: int = 64
+    datamodule_rerank_bm25_k: int = 64
     dataloader_num_workers: int = 0
 
     trainer_max_epochs: int = 100

@@ -100,6 +100,61 @@ class DPR(pl.LightningModule):
         similarity_scores = torch.matmul(context_embeddings, query_embeddings_t)
         return similarity_scores, query_embeddings, context_embeddings
 
+    def _calc_scores(
+        self,
+        query_input_ids: torch.Tensor,
+        query_attention_mask: torch.Tensor,
+        context_input_ids: torch.Tensor,
+        context_attention_mask: torch.Tensor,
+        bm25_input_ids: torch.Tensor | None,
+        bm25_attention_mask: torch.Tensor | None,
+        include_bm25: bool = True,
+    ):
+
+        # Memorize original shape first
+        bm25_input_shape = bm25_input_ids.shape
+        bm25_attention_mask_shape = bm25_attention_mask.shape
+
+        # Reshape to 2D for encoding
+        bm25_input_ids = bm25_input_ids.reshape(-1, bm25_input_shape[-1])
+        bm25_attention_mask = bm25_attention_mask.reshape(
+            -1, bm25_attention_mask_shape[-1]
+        )
+
+        # query embeddings
+        query_embeddings = self.query_encoder(query_input_ids, query_attention_mask)
+
+        # context embeddings
+        context_embeddings = self.context_encoder(
+            context_input_ids, context_attention_mask
+        )
+
+        # calculate in-batch scores
+        in_batch_scores = torch.matmul(query_embeddings, context_embeddings.t())
+
+        if not include_bm25:
+            return in_batch_scores
+
+        # bm25 embeddings
+        bm25_embeddings = self.context_encoder(bm25_input_ids, bm25_attention_mask)
+
+        # calculate bm25 scores
+        bm25_embeddings_r = bm25_embeddings.reshape(
+            bm25_input_shape[0], bm25_input_shape[1], -1
+        )
+        bm25_embeddings_t = bm25_embeddings_r.transpose(-2, -1)
+        query_embeddings_r = query_embeddings.unsqueeze(1)
+
+        bm25_scores = torch.matmul(query_embeddings_r, bm25_embeddings_t)
+        bm25_scores = bm25_scores.squeeze(dim=1)
+
+        # merge scores
+        merged_scores = torch.cat((in_batch_scores, bm25_scores), dim=1)
+
+        # The shape will be from N x M matrix to N x (M + K) matrix
+        # k is the number of bm25 documents
+        return merged_scores
+
     def configure_optimizers(self):
         return torch.optim.AdamW(
             params=self.parameters(),
@@ -112,15 +167,20 @@ class DPR(pl.LightningModule):
         query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
+        bm25_input_ids = batch["bm25_input_ids"]
+        bm25_attention_mask = batch["bm25_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        scores, query_embeddings, context_embeddings = self.forward(
+        scores = self._calc_scores(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
             context_attention_mask,
+            bm25_input_ids,
+            bm25_attention_mask,
+            include_bm25=True,
         )
-        loss = self.loss(scores)
+        loss = self._calc_loss(scores)
         self.log(
             name="train_loss",
             value=loss,
@@ -136,16 +196,22 @@ class DPR(pl.LightningModule):
         query_attention_mask = batch["query_attention_mask"]
         context_input_ids = batch["context_input_ids"]
         context_attention_mask = batch["context_attention_mask"]
+        bm25_input_ids = batch["bm25_input_ids"]
+        bm25_attention_mask = batch["bm25_attention_mask"]
         batch_size = query_input_ids.shape[0]
 
-        scores, query_embeddings, context_embeddings = self.forward(
+        scores = self._calc_scores(
             query_input_ids,
             query_attention_mask,
             context_input_ids,
             context_attention_mask,
+            bm25_input_ids,
+            bm25_attention_mask,
+            include_bm25=True,
         )
-        loss = self.loss(scores)
-        mrr = self.calculate_mrr(scores)
+
+        loss = self._calc_loss(scores)
+        mrr = self._calc_mrr(scores)
         self.log(
             name="val_loss",
             value=loss,
@@ -171,13 +237,13 @@ class DPR(pl.LightningModule):
     #     self.log_dict(norms)
     # trainer = Trainer(detect_anomaly=True)
 
-    def loss(self, scores: torch.Tensor) -> torch.Tensor:
+    def _calc_loss(self, scores: torch.Tensor) -> torch.Tensor:
         labels = torch.arange(scores.size(0), device=scores.device, dtype=torch.long)
         loss = self.criteria(scores, labels)
         return loss
 
     @staticmethod
-    def calculate_mrr(scores: torch.Tensor) -> float:
+    def _calc_mrr(scores: torch.Tensor) -> float:
         """Calculate Mean Reciprocal Rank (MRR)"""
 
         scores_mat = scores.cpu().detach().numpy()

@@ -45,6 +45,10 @@ TRAINER_MAX_EPOCHS = settings.trainer_max_epochs
 # DataModules
 DATAMODULE_BATCH_SIZE = settings.datamodule_batch_size
 
+DATAMODULE_DPR_BM25_K = settings.datamodule_dpr_bm25_k
+
+DATAMODULE_RERANK_BM25_K = settings.datamodule_rerank_bm25_k
+
 # Checkpoints
 CHECKPOINT_DIRPATH = settings.checkpoint_dirpath
 
@@ -78,6 +82,7 @@ def main():
     dpr_datamodule = DprSquadDataModule(
         pretrained_model_name_or_path=MODEL_NAME,
         batch_size=DATAMODULE_BATCH_SIZE,
+        bm25_k=DATAMODULE_DPR_BM25_K,
     )
 
     callbacks = [
