@@ -272,6 +272,7 @@ class DprDataModule(LightningDataModule):
 class RerankDataset(Dataset):
     def __init__(self, dataset: Dataset, bm25_k: int = 64, dpr_k: int = 64):
         self.bm25_k = bm25_k
+        self.dpr_k = dpr_k
         self.dataset = dataset
         self.bm25 = BM25Retriever(self.dataset)
         self.dpr = DprRetriever(self.dataset)
@@ -291,6 +292,12 @@ class RerankDataset(Dataset):
                 "대학로에서 소문난 연기파 배우로서 2004년 아카펠라 연극 '겨울공주 평강이야기'를 시작으로 연극과 뮤지컬 무대에서 입지를 다졌다. 2015년 드라마 《육룡이 나르샤》에서 정도전의 혁명동지 역으로 시청자들에게 눈도장을 찍었으며, 2017년 영화 《범죄도시》에서는 흑룡파 조직의 보스 장첸(윤계상)의 오른팔로서 삭발한 머리와 날카로운 눈빛으로 등장하여 첫 악역 연기에 선보였다. 진선규는 600만 관객을 동원한 영화 《범죄도시》를 \"연기 인생의 터닝 포인트이자 인생작\"이라고 말했다. 진선규는 이 영화로 2017년 청룡영화제 남우조연상을 수상하였고, 시상식에서 수상자로 호명돼 무대에 오르자마자 눈물을 쏟는 수상 소감으로 감동을 안겼다.",
             ],
             "bm25_labels": [0, 0, 0],
+            "dpr_contexts": [
+                "사법연수원을 16기로 수료한 후 변호사 생활을 하다가 16대 총선에서 서울 강남을에 출마하여 정계에 입문했다. 제16대 국회의원 시절 4년 연속 시민단체 주관 국정감사 우수위원으로 선정되었고, 정치개혁특위 간사를 맡아 깨끗하고 투명한 선거를 목적으로 한 소위 ‘오세훈 선거법’으로 불리는 3개 정치관계법 개정을 주도했다. 2006년 서울시장에 당선되어 2011년까지 서울특별시장을 연임하며 창의시정과 디자인 서울을 주요 정책으로 하면서, 청렴도 향상, 강남북 균형발전, 복지 정책 희망드림 프로젝트, 대기환경 개선 등에 주력하였고, 다산 콜 센터와 장기전세주택 시프트를 도입하였다. 2011년 저소득층을 대상으로 선별적 복지를 주장하며 서울시 무상 급식 정책에서 주민 투표를 제안하고, 투표율이 미달되자 시장직을 사퇴하였다. 바른정당 상임고문을 지내다가 국민의당과의 합당에 반대하며 2018년 2월 5일 바른정당을 탈당했다.",
+                "지원 이동통신의 경우, LTE Cat.12·13, LTE Cat.9 그리고 LTE Cat.6 모델이 있다. 우선, 업로드 속도는 Cat.13이 150 Mbps, Cat.9와 Cat.6이 50 Mbps로 최대 속도가 잡혀있고, 다운로드 속도는 Cat.12가 600 Mbps, Cat.9가 450 Mbps 그리고 Cat.6이 300 Mbps로 최대 속도가 잡혀져있다. 3 Band 캐리어 어그리게이션의 경우 상황에 따라 추가적으로 지원하며, VoLTE를 지원한다. 또한, 갤럭시 S7과 같이 모든 기기의 통신 모뎀 솔루션이 모바일 AP에 내장된 최초의 갤럭시 S 시리즈 중 하나이다. 이는 퀄컴 스냅드래곤 시리즈를 탑재한 기존 갤럭시 S 시리즈 스마트폰은 극소수를 제외하면 통신 모뎀 솔루션이 기본적으로 내장되어 있었으나, 삼성 엑시노스 시리즈는 플래그십 AP로는 삼성 엑시노스 8890이 통신 모뎀 솔루션을 내장한 최초의 모바일 AP이기 때문이다.",
+                "대학로에서 소문난 연기파 배우로서 2004년 아카펠라 연극 '겨울공주 평강이야기'를 시작으로 연극과 뮤지컬 무대에서 입지를 다졌다. 2015년 드라마 《육룡이 나르샤》에서 정도전의 혁명동지 역으로 시청자들에게 눈도장을 찍었으며, 2017년 영화 《범죄도시》에서는 흑룡파 조직의 보스 장첸(윤계상)의 오른팔로서 삭발한 머리와 날카로운 눈빛으로 등장하여 첫 악역 연기에 선보였다. 진선규는 600만 관객을 동원한 영화 《범죄도시》를 \"연기 인생의 터닝 포인트이자 인생작\"이라고 말했다. 진선규는 이 영화로 2017년 청룡영화제 남우조연상을 수상하였고, 시상식에서 수상자로 호명돼 무대에 오르자마자 눈물을 쏟는 수상 소감으로 감동을 안겼다.",
+            ],
+            "dpr_labels": [0, 0, 0],
         }
 
     def __len__(self) -> int:
@@ -304,7 +311,7 @@ class RerankDataset(Dataset):
         bm25_contexts = [x.page_content for x in bm25_documents]
         bm25_labels = [int(title == x.metadata["title"]) for x in bm25_documents]
 
-        dpr_documents = self.dpr.fetch(query, k=self.bm25_k)
+        dpr_documents = self.dpr.fetch(query, k=self.dpr_k)
         dpr_contexts = [x.page_content for x in dpr_documents]
         dpr_labels = [int(title == x.metadata["title"]) for x in dpr_documents]
 
@@ -376,8 +383,8 @@ class RerankDataModule(LightningDataModule):
         for query, contexts in zip(query_batch, contexts_batch):
             bm25_contexts_encoding = self.tokenizer.batch_encode_plus(
                 [(query, context) for context in contexts],
-                max_length=CONTEXT_MAX_LENGTH,
-                padding=CONTEXT_PADDING,
+                max_length=RERANK_MAX_LENGTH,
+                padding=RERANK_PADDING,
                 truncation=True,
                 return_tensors="pt",
             )

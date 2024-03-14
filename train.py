@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 
+from re2g.models.rerank import Rerank
+
 try:
     load_dotenv()
 except:
@@ -13,6 +15,7 @@ from lightning.pytorch.loggers import WandbLogger
 import wandb
 from re2g.configs import settings
 from re2g.datasets.v1 import DprDataModule
+from re2g.datasets.v1 import RerankDataModule
 from re2g.models.dpr import DPR
 
 PROJECT = "re2g"
@@ -60,8 +63,10 @@ CHECKPOINT_EVERY_N_TRAIN_STEPS = settings.checkpoint_every_n_train_steps
 
 CKPT_PATH = settings.ckpt_path or None
 
+TRAINING_MODEL = settings.training_model
 
-def main():
+
+def train_dpr():
 
     for key, value in settings.dict().items():
         print(f"{key}: {value}")
@@ -109,5 +114,57 @@ def main():
     trainer.fit(model=dpr, datamodule=dpr_datamodule, ckpt_path=CKPT_PATH)
 
 
+def train_rerank():
+    for key, value in settings.dict().items():
+        print(f"{key}: {value}")
+
+    rerank = Rerank(
+        pretrained_model_name_or_path=MODEL_NAME,
+        num_trainable_layers=NUM_QUERY_TRAINABLE_LAYERS,
+        learning_rate=OPTIMIZER_LEARNING_RATE,
+        weight_decay=OPTIMIZER_WEIGHT_DECAY,
+    )
+
+    wandb.init(project=PROJECT, config=rerank.hparams)
+    wandb.watch(rerank, log="all", log_freq=1)
+
+    logger = WandbLogger(log_model="all")
+
+    rerank_datamodule = RerankDataModule(
+        pretrained_model_name_or_path=MODEL_NAME,
+        batch_size=DATAMODULE_BATCH_SIZE,
+        bm25_k=DATAMODULE_DPR_BM25_K,
+        dpr_k=DATAMODULE_RERANK_BM25_K,
+    )
+
+    callbacks = [
+        ModelCheckpoint(
+            dirpath=CHECKPOINT_DIRPATH,
+            monitor=CHECKPOINT_MONITOR,
+            mode=CHECKPOINT_MODE,
+            every_n_train_steps=CHECKPOINT_EVERY_N_TRAIN_STEPS,
+        ),
+        ModelSummary(max_depth=-1),
+    ]
+
+    trainer = L.Trainer(
+        limit_train_batches=TRAINER_LIMIT_TRAIN_BATCHES,
+        limit_val_batches=TRAINER_LIMIT_VAL_BATCHES,
+        limit_test_batches=TRAINER_LIMIT_TEST_BATCHES,
+        max_epochs=TRAINER_MAX_EPOCHS,
+        strategy=TRAINER_STRATEGY,
+        precision=TRAINER_PRECISION,
+        logger=logger,
+        callbacks=callbacks,
+    )
+
+    trainer.fit(model=rerank, datamodule=rerank_datamodule, ckpt_path=CKPT_PATH)
+
+
 if __name__ == "__main__":
-    main()
+    if TRAINING_MODEL == "dpr":
+        train_dpr()
+    elif TRAINING_MODEL == "rerank":
+        train_rerank()
+    else:
+        raise ValueError(f"Invalid training model: {TRAINING_MODEL}")

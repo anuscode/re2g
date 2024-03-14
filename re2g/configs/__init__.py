@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     datamodule_batch_size: int = 128
     datamodule_dpr_bm25_k: int = 64
     datamodule_rerank_bm25_k: int = 64
+    datamodule_rerank_dpr_k: int = 64
     dataloader_num_workers: int = 0
 
     trainer_max_epochs: int = 100
@@ -37,6 +38,8 @@ class Settings(BaseSettings):
     checkpoint_mode: str = "max"
     checkpoint_every_n_train_steps: int = 0
     ckpt_path: str | None = "last"
+
+    training_model: str = "dpr"
 
 
 settings = Settings()

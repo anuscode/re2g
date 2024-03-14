@@ -64,15 +64,63 @@ class Rerank(L.LightningModule):
         self.reranker = ReRanker(pretrained_model_name_or_path, num_trainable_layers)
         self.save_hyperparameters()
 
-    def forward(self, input_ids, attention_mask):
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        token_type_ids: torch.Tensor,
+    ):
         scores = self.reranker(input_ids, attention_mask)
         return scores
 
     def training_step(self, batch, batch_idx):
-        input_ids, attention_mask, labels = batch
-        scores = self.forward(input_ids, attention_mask).squeeze()
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        token_type_ids = batch["token_type_ids"]
+        labels = batch["labels"]
+        shape = input_ids.shape
+
+        input_ids = input_ids.view(-1, shape[-1])
+        attention_mask = attention_mask.view(-1, shape[-1])
+        token_type_ids = token_type_ids.view(-1, shape[-1])
+
+        scores = self.forward(input_ids, attention_mask, token_type_ids)
+        scores = scores.view(labels.shape)
+
         loss = nn.BCELoss()(scores, labels.float())
-        self.log("train_loss", loss)
+        self.log(
+            name="train_loss",
+            value=loss,
+            prog_bar=True,
+            logger=True,
+            sync_dist=True,
+            batch_size=shape[0],
+        )
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        token_type_ids = batch["token_type_ids"]
+        labels = batch["labels"]
+        shape = input_ids.shape
+
+        input_ids = input_ids.view(-1, shape[-1])
+        attention_mask = attention_mask.view(-1, shape[-1])
+        token_type_ids = token_type_ids.view(-1, shape[-1])
+
+        scores = self.forward(input_ids, attention_mask, token_type_ids)
+        scores = scores.view(labels.shape)
+
+        loss = nn.BCELoss()(scores, labels.float())
+        self.log(
+            name="val_loss",
+            value=loss,
+            prog_bar=True,
+            logger=True,
+            sync_dist=True,
+            batch_size=shape[0],
+        )
         return loss
 
     def configure_optimizers(self):

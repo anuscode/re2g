@@ -216,13 +216,15 @@ class DPR(pl.LightningModule):
             name="val_loss",
             value=loss,
             logger=True,
+            prog_bar=True,
             sync_dist=True,
             batch_size=batch_size,
         )
         self.log(
-            name="mrr",
+            name="val_mrr",
             value=mrr,
             logger=True,
+            prog_bar=True,
             sync_dist=True,
             batch_size=batch_size,
         )
