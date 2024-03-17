@@ -65,11 +65,10 @@ CKPT_PATH = settings.ckpt_path or None
 
 TRAINING_MODEL = settings.training_model
 
+RERANK_LOSS_TYPE = settings.rerank_loss_type
+
 
 def train_dpr():
-
-    for key, value in settings.dict().items():
-        print(f"{key}: {value}")
 
     dpr = DPR(
         pretrained_model_name_or_path=MODEL_NAME,
@@ -115,14 +114,13 @@ def train_dpr():
 
 
 def train_rerank():
-    for key, value in settings.dict().items():
-        print(f"{key}: {value}")
 
     rerank = Rerank(
         pretrained_model_name_or_path=MODEL_NAME,
         num_trainable_layers=NUM_QUERY_TRAINABLE_LAYERS,
         learning_rate=OPTIMIZER_LEARNING_RATE,
         weight_decay=OPTIMIZER_WEIGHT_DECAY,
+        loss_type=RERANK_LOSS_TYPE,
     )
 
     wandb.init(project=PROJECT, config=rerank.hparams)
@@ -162,6 +160,9 @@ def train_rerank():
 
 
 if __name__ == "__main__":
+    for key, value in settings.dict().items():
+        print(f"{key}: {value}")
+
     if TRAINING_MODEL == "dpr":
         train_dpr()
     elif TRAINING_MODEL == "rerank":

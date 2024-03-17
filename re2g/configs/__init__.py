@@ -41,5 +41,7 @@ class Settings(BaseSettings):
 
     training_model: str = "dpr"
 
+    rerank_loss_type: str = "mpnl"
+
 
 settings = Settings()

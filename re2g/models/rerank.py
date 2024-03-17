@@ -1,7 +1,9 @@
 import lightning as L
 import torch
-from torch import nn
+import torch.nn as nn
 from transformers import ElectraModel
+
+from re2g.losses import MPNLWithLogitsLoss
 
 
 class ReRanker(nn.Module):
@@ -44,7 +46,6 @@ class ReRanker(nn.Module):
         x = self.linear_1(x)
         x = self.tanh(x)
         x = self.linear_2(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -55,6 +56,7 @@ class Rerank(L.LightningModule):
         num_trainable_layers: int = 2,
         learning_rate: float = 1e-3,
         weight_decay: float = 1e-2,
+        loss_type: str = "mpnl",
     ):
         super(Rerank, self).__init__()
         self.pretrained_model_name_or_path = pretrained_model_name_or_path
@@ -62,6 +64,15 @@ class Rerank(L.LightningModule):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.reranker = ReRanker(pretrained_model_name_or_path, num_trainable_layers)
+
+        if loss_type not in ["mpnl", "bce"]:
+            raise ValueError("loss_type must be one of ['mpnl', 'bce']")
+
+        if loss_type == "mpnl":
+            self.loss = MPNLWithLogitsLoss()
+        else:
+            self.loss = nn.BCEWithLogitsLoss()
+
         self.save_hyperparameters()
 
     def forward(
@@ -70,7 +81,7 @@ class Rerank(L.LightningModule):
         attention_mask: torch.Tensor,
         token_type_ids: torch.Tensor,
     ):
-        scores = self.reranker(input_ids, attention_mask)
+        scores = self.reranker(input_ids, attention_mask, token_type_ids)
         return scores
 
     def training_step(self, batch, batch_idx):
@@ -87,16 +98,16 @@ class Rerank(L.LightningModule):
         scores = self.forward(input_ids, attention_mask, token_type_ids)
         scores = scores.view(labels.shape)
 
-        loss = nn.BCELoss()(scores, labels.float())
+        train_loss = self.loss(scores, labels.float())
         self.log(
             name="train_loss",
-            value=loss,
+            value=train_loss,
             prog_bar=True,
             logger=True,
             sync_dist=True,
             batch_size=shape[0],
         )
-        return loss
+        return train_loss
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -112,16 +123,16 @@ class Rerank(L.LightningModule):
         scores = self.forward(input_ids, attention_mask, token_type_ids)
         scores = scores.view(labels.shape)
 
-        loss = nn.BCELoss()(scores, labels.float())
+        val_loss = self.loss(scores, labels.float())
         self.log(
             name="val_loss",
-            value=loss,
+            value=val_loss,
             prog_bar=True,
             logger=True,
             sync_dist=True,
             batch_size=shape[0],
         )
-        return loss
+        return val_loss
 
     def configure_optimizers(self):
         return torch.optim.AdamW(
