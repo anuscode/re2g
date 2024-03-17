@@ -14,10 +14,11 @@ class ReRanker(nn.Module):
         super(ReRanker, self).__init__()
 
         self.electra = ElectraModel.from_pretrained(pretrained_model_name_or_path)
-        self.linear_1 = nn.Linear(768, 16)
+        self.linear_1 = nn.Linear(768, 256)
+        self.gelu = nn.GELU()
+        self.linear_2 = nn.Linear(256, 16)
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(16, 1)
-        self.sigmoid = nn.Sigmoid()
+        self.linear_3 = nn.Linear(16, 1)
 
         for param in self.electra.parameters():
             param.requires_grad = False
@@ -44,8 +45,10 @@ class ReRanker(nn.Module):
         sequence_output = outputs.last_hidden_state
         x = sequence_output[:, 0, :]
         x = self.linear_1(x)
-        x = self.tanh(x)
+        x = self.gelu(x)
         x = self.linear_2(x)
+        x = self.tanh(x)
+        x = self.linear_3(x)
         return x
 
 
@@ -81,8 +84,8 @@ class Rerank(L.LightningModule):
         attention_mask: torch.Tensor,
         token_type_ids: torch.Tensor,
     ):
-        scores = self.reranker(input_ids, attention_mask, token_type_ids)
-        return scores
+        logits = self.reranker(input_ids, attention_mask, token_type_ids)
+        return logits
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -95,10 +98,10 @@ class Rerank(L.LightningModule):
         attention_mask = attention_mask.view(-1, shape[-1])
         token_type_ids = token_type_ids.view(-1, shape[-1])
 
-        scores = self.forward(input_ids, attention_mask, token_type_ids)
-        scores = scores.view(labels.shape)
+        logits = self.forward(input_ids, attention_mask, token_type_ids)
+        logits = logits.view(labels.shape)
 
-        train_loss = self.loss(scores, labels.float())
+        train_loss = self.loss(logits, labels.float())
         self.log(
             name="train_loss",
             value=train_loss,
