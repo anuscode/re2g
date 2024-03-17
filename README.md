@@ -17,39 +17,49 @@ OPTIMIZER_WEIGHT_DECAY=1e-2
 
 # Context Models
 CONTEXT_MAX_LENGTH=512
-CONTEXT_PADDING=longest
-# The higher the number, the more trainable layers
+CONTEXT_PADDING=max_length
 CONTEXT_NUM_TRAINABLE_LAYERS=2
 
 # Query Models
 QUERY_MAX_LENGTH=512
-QUERY_PADDING=longest
-# The higher the number, the more trainable layers
+QUERY_PADDING=max_length
 QUERY_NUM_TRAINABLE_LAYERS=2
 
+# Rerank Models
+RERANK_MAX_LENGTH=512
+RERANK_PADDING=max_length
+RERANK_NUM_TRAINABLE_LAYERS=2
+
 # Data module
-# In this model, batch size is very important
-DATAMODULE_BATCH_SIZE=128
+DATAMODULE_BATCH_SIZE=8
+DATAMODULE_DPR_BM25_K=8
+DATAMODULE_RERANK_BM25_K=8
+DATAMODULE_RERANK_DPR_K=8
 
 # Dataloader
-# If you are encountering issue on mac os,
-# please set DATALOADER_NUM_WORKERS=0
-DATALOADER_NUM_WORKERS=16
+DATALOADER_NUM_WORKERS=0
 
 # Trainer
 TRAINER_STRATEGY=auto
 TRAINER_PRECISION=32
-TRAINER_MAX_EPOCHS=100
+TRAINER_MAX_EPOCHS=500
 TRAINER_LIMIT_VAL_BATCHES=1e-0
 TRAINER_LIMIT_TRAIN_BATCHES=1e-0
 TRAINER_LIMIT_TEST_BATCHES=1e-0
 
 # Checkpoint
-CHECKPOINT_EVERY_N_TRAIN_STEPS=0
+CHECKPOINT_EVERY_N_TRAIN_STEPS=100
 CHECKPOINT_DIRPATH=checkpoints
 CHECKPOINT_MONITOR=mrr
 CHECKPOINT_MODE=max
-CKPT_PATH=
+CKPT_PATH=last
+
+# Training Model Target
+# available value is 'dpr' or 'rerank'
+TRAINING_MODEL=rerank
+
+RERANK_LOSS_TYPE=mpnl
+
 ```
 
 #### Log-in to wandb before training the model.
