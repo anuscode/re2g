@@ -71,12 +71,12 @@ python train.py
 #### 8 Epoch results images are as below. (Not yet done)
 #### Apparently, our living room has been mistaken for a runway, thanks to the airplane-like noise levels during my training sessions. My wife filed a playful complaint, effectively grounding my progress.
 
-![Train Loss](./assets/train_loss.png "Train Loss")
+![Train Loss](./assets/dpr_train_loss.png "Train Loss")
 - The training loss is expected to converge around the level of 0.5.
 
-![Val MRR](./assets/mrr.png "MRR")
+![Val MRR](./assets/dpr_mrr.png "MRR")
 - Among 64 batches, it ranks on average within the top 2.
 - Currently, based on the results at 8 epochs, additional training is anticipated to further improve the metrics.
 
-![Val Loss](./assets/val_loss.png "Validation Loss")
+![Val Loss](./assets/dpr_val_loss.png "Validation Loss")
 - It seems necessary to observe further to determine whether the validation loss will converge.
